@@ -301,6 +301,84 @@ class Mailbox_model extends App_Model
     }
 
     /**
+     * Get connected accounts for a staff member.
+     */
+    public function get_accounts($staff_id)
+    {
+        $this->db->where('staffid', $staff_id);
+        $this->db->order_by('is_default', 'DESC');
+        return $this->db->get(db_prefix() . 'mailbox_accounts')->result_array();
+    }
+
+    /**
+     * Add a connected account for a staff member.
+     */
+    public function add_account($data, $staff_id)
+    {
+        if (isset($data['is_default']) && $data['is_default']) {
+            // unset other defaults for this staff
+            $this->db->where('staffid', $staff_id);
+            $this->db->update(db_prefix() . 'mailbox_accounts', ['is_default' => 0]);
+        }
+        $insert = [
+            'staffid' => $staff_id,
+            'email' => $data['email'],
+            'mail_password' => isset($data['mail_password']) ? $data['mail_password'] : null,
+            'mail_signature' => isset($data['mail_signature']) ? $data['mail_signature'] : null,
+            'is_default' => isset($data['is_default']) && $data['is_default'] ? 1 : 0,
+        ];
+        $this->db->insert(db_prefix() . 'mailbox_accounts', $insert);
+        return $this->db->insert_id();
+    }
+
+    /**
+     * Edit connected account.
+     */
+    public function edit_account($id, $data, $staff_id)
+    {
+        if (isset($data['is_default']) && $data['is_default']) {
+            $this->db->where('staffid', $staff_id);
+            $this->db->update(db_prefix() . 'mailbox_accounts', ['is_default' => 0]);
+        }
+        $update = [
+            'email' => $data['email'],
+            'mail_password' => isset($data['mail_password']) ? $data['mail_password'] : null,
+            'mail_signature' => isset($data['mail_signature']) ? $data['mail_signature'] : null,
+            'is_default' => isset($data['is_default']) && $data['is_default'] ? 1 : 0,
+        ];
+        $this->db->where('id', $id);
+        $this->db->where('staffid', $staff_id);
+        $this->db->update(db_prefix() . 'mailbox_accounts', $update);
+        return true;
+    }
+
+    /**
+     * Delete connected account.
+     */
+    public function delete_account($id, $staff_id)
+    {
+        $this->db->where('id', $id);
+        $this->db->where('staffid', $staff_id);
+        $this->db->delete(db_prefix() . 'mailbox_accounts');
+        return $this->db->affected_rows() > 0;
+    }
+
+    /**
+     * Set an account as default for staff, unset others.
+     */
+    public function set_default_account($id, $staff_id)
+    {
+        $this->db->where('staffid', $staff_id);
+        $this->db->update(db_prefix() . 'mailbox_accounts', ['is_default' => 0]);
+
+        $this->db->where('id', $id);
+        $this->db->where('staffid', $staff_id);
+        $this->db->update(db_prefix() . 'mailbox_accounts', ['is_default' => 1]);
+
+        return true;
+    }
+
+    /**
      * Clients Data.
      *
      */

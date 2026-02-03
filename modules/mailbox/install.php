@@ -202,6 +202,48 @@ if (!$CI->db->field_exists('inbox_id', 'mail_conversation')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'mail_conversation` ADD COLUMN `inbox_id` int(255) DEFAULT NULL');
 }
 
+// Mail accounts table (for per-account SMTP/IMAP + central account support)
+if (!$CI->db->table_exists(db_prefix() . 'mail_accounts')) {
+  $CI->db->query('CREATE TABLE `' . db_prefix() . "mail_accounts` (
+    `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `email` varchar(191) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    `display_name` varchar(150) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `smtp_host` varchar(191) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `smtp_port` int(11) DEFAULT 587,
+    `smtp_username` varchar(191) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `smtp_password` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `smtp_encryption` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `imap_server` varchar(191) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `imap_encryption` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `rest_ip` varchar(45) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+    `is_central` tinyint(1) NOT NULL DEFAULT 0,
+    `is_default` tinyint(1) NOT NULL DEFAULT 0,
+    `parent_account_id` int(11) DEFAULT NULL,
+    `assigned_staff` TEXT NULL,
+    `active` tinyint(1) NOT NULL DEFAULT 1,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=" . $CI->db->char_set . ';');
+}
+
+// Add from_account field to outbox to store selected sending account
+if (!$CI->db->field_exists('from_account', 'mail_outbox')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'mail_outbox` ADD COLUMN `from_account` int(11) DEFAULT NULL;');
+}
+
+// Create mailbox_accounts table to support multiple connected accounts per staff
+if (!$CI->db->table_exists(db_prefix() . 'mailbox_accounts')) {
+  $CI->db->query('CREATE TABLE `'.db_prefix()."mailbox_accounts` (
+    `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `staffid` int(11) NOT NULL DEFAULT '0',
+    `email` varchar(191) NOT NULL,
+    `mail_password` varchar(250) DEFAULT NULL,
+    `mail_signature` varchar(250) DEFAULT NULL,
+    `is_default` tinyint(1) NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=".$CI->db->char_set.';');
+}
+
 // Moving necessary dependencies to the correct place for clean installs of v2.7.0+
 $checkfolder = FCPATH . 'application/third_party/php-imap';
 $srcloc = APP_MODULES_PATH . 'mailbox/third_party/php-imap'; 

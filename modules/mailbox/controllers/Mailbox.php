@@ -252,6 +252,33 @@ class Mailbox extends AdminController
     }
 
     /**
+     * Show mailbox account settings
+     *
+     * @return view
+     */
+    public function account_settings()
+    {
+        if (!is_admin()) {
+            access_denied('mailbox_settings');
+        }
+        $this->load->model('mailbox/Mailbox_accounts_model');
+        $post = $this->input->post();
+        if ($post) {
+            update_option('mailbox_imap_server', $post['mailbox_imap_server']);
+            update_option('mailbox_encryption', $post['mailbox_encryption']);
+            update_option('mailbox_folder_scan', $post['mailbox_folder_scan']);
+            update_option('mailbox_check_every', $post['mailbox_check_every']);
+            update_option('mailbox_only_loop_on_unseen_emails', isset($post['mailbox_only_loop_on_unseen_emails']) ? 1 : 0);
+            update_option('mailbox_enable_html', isset($post['mailbox_enable_html']) ? 1 : 0);
+            set_alert('success', _l('updated_successfully', _l('mailbox')));
+            redirect(admin_url('mailbox/account_settings'));
+        }
+        $data['accounts'] = $this->Mailbox_accounts_model->get_all(false);
+        $data['title'] = _l('mailbox_settings');
+        $this->load->view('mailbox/mailbox_settings_accounts', $data);
+    }
+
+    /**
      * Assign leads
      *
      * @return redirect
