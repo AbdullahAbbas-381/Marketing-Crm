@@ -1,0 +1,1 @@
+<?php echo cleanEmail($content); ?><?php /**PATH /home/u248167739/domains/accounts.paramountbuilt.co.uk/public_html/application/resources/views/pages/emails/template.blade.php ENDPATH**/ ?>
